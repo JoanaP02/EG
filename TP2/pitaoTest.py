@@ -1,7 +1,8 @@
 from lark import Lark,Token,Tree, Discard
 from lark.tree import pydot__tree_to_png
 from lark.visitors import Interpreter
-
+import lark.tree as lark_tree
+import lark.lexer as lark_lexer
 
 # FALTA
 # 4- COntar if dentro de if ou se/caso dentro de se/caso
@@ -13,11 +14,11 @@ from lark.visitors import Interpreter
 
 grammar2 = '''
 // Regras Sintaticas - Pitão
-start: (classe | funcao | decls | insts)+
+start: (classe | funcao | decls | inst)+
 
-classe: "classe" ID ACHA (funcao | decls | insts)* FCHA
+classe: "classe" ID ACHA (funcao | decls | inst)* FCHA
 
-funcao: "fun" ID APAR parametros? FPAR ("=>" tipo)? ACHA (funcao | decls | insts)* FCHA
+funcao: "fun" ID APAR parametros? FPAR ("=>" tipo)? ACHA (funcao | decls | inst)* FCHA
 parametros: parametro (VIR parametro)*
 parametro: ID ":" tipo
 
@@ -27,8 +28,7 @@ decl: var ID ":" tipo ("=" expr)?
 var: DEIXA | CONST
 tipo: INT | SET | ARRAY | TUPLO | ESTRINGUE | LISTA
 
-insts: inst+
-inst: atribuicao | chamar | ler | escreve | imprime | selecao | repeticao
+inst: atribuicao | chamar | ler | escreve | imprime | se | repeticao | caso
 
 atribuicao: ID "=" expr
 chamar: ID APAR parametros? FPAR
@@ -36,15 +36,13 @@ ler: "ler" ID
 escreve: "escreve" expr
 imprime: "imprime" expr
 
-selecao: se | caso
-
-se: SE se_expr "entao" insts (SENAO se_expr "entao" insts)* (DEFEITO insts)? FIM
-caso: CORRESPONDE expr "com" (CASO expr "=>" insts ("break")?)+ (DEFEITO "=>" insts)? FIM
+se: SE se_expr "entao" inst+(SENAO se_expr "entao" inst+)* (DEFEITO inst+)? "fim"
+caso: CORRESPONDE expr "com" (CASO expr "=>" inst+ ("break")?)+ (DEFEITO "=>" inst+)? "fim"
 
 repeticao: enq_fazer | repetir_ate
 
-enq_fazer: "enq" se_expr "fazer" insts
-repetir_ate: "fazer" insts "ate" se_expr
+enq_fazer: "enq" se_expr "fazer" inst+
+repetir_ate: "fazer" inst+ "ate" se_expr
 
 expr: term (OP term)*
 se_expr: term (OP term)* (OUTRO term (OP term)*)*
@@ -65,7 +63,6 @@ LISTA: "Lista"
 SE: "se"
 SENAO: "senao"
 DEFEITO: "defeito"
-FIM: "fim"
 CORRESPONDE: "corresponde"
 CASO: "caso"
 OP: "+" | "-" | "*" | "/" | "%" | "^" 
@@ -92,6 +89,9 @@ class MyInterpreter(Interpreter):
         self.estruturas_controlo = 0
         
         self.insideIf = False
+        self.insideIf_acc = []
+        # Este final poderá estar no dicionario (estrutura de dados) que tenhas todas as informacoes
+        self.finalIfs = []
         
         # dic_info = { variáveis: [somaInt, somaSet, somaArray, somaTuplo, somaEstringue, somaLista],
         #              instrucoes : [declaracoes, atribuicoes, leitura, escrita, condicionais, cíclicas],
@@ -110,6 +110,9 @@ class MyInterpreter(Interpreter):
 
         for child in tree.children:
             print(self.visit(child))
+        
+        print("FInal")
+        print(self.finalIfs)
 
         return f"""Ints {self.vars['Int']}
 Set {self.vars['Set']}
@@ -195,12 +198,18 @@ Lista {self.vars['Lista']}
     def tipo(self, tree):
         return tree.children[0].value
 
-    def insts(self, tree):
-        self.visit_children(tree)
-
     def inst(self, tree):
         print("Inst")
-        print(tree.children)
+        if self.insideIf and len(tree.children) == 1 and tree.children[0].data == 'se':
+            self.insideIf = True
+        else:
+            if len(self.insideIf_acc) > 1:
+
+                finalResult = " e ".join(self.insideIf_acc)+":"
+                before = self.insideIf_acc[0] + " , " + "".join([ i  for i in self.insideIf_acc[1:]])
+                self.finalIfs.append(before+" => "+finalResult)
+                self.insideIf_acc = []
+            self.insideIf = False
         self.visit_children(tree)
 
     def atribuicao(self, tree):
@@ -243,37 +252,71 @@ Lista {self.vars['Lista']}
         print("Imprime")
         self.instrucoes['imprime'] += 1
 
-    def selecao(self, tree):
-        print("Selecao")
-        if self.controlo == True:
-            self.estruturas_controlo += 1
-        self.controlo = True
-        self.visit_children(tree)
-        self.instrucoes['condicionais'] += 1
-        self.controlo = False
+    # def selecao(self, tree):
+    #     print("Selecao")
+    #     if self.controlo == True:
+    #         self.estruturas_controlo += 1
+    #     self.controlo = True
+    #     self.visit_children(tree)
+    #     self.instrucoes['condicionais'] += 1
+    #     self.controlo = False
 
     def se(self, tree):
         print("Se")
-        #if self.insideIf:
-        #    # ir aos filhos ver se existe um se com else ou elif
-        #    for child in tree.children:
-        #        if child.data == 'senao' or child.data == 'defeito':
-        #            print("AVISO: Condição Se sem Senao ou Defeito dentro de um Se")
-        #self.insideIf = True
-        self.visit_children(tree)
-        self.insideIf = False
+        if len(tree.children) == 3:
+            self.insideIf_acc.append(self.visit(tree.children[1]))
+            self.insideIf= True
+            self.visit(tree.children[2])
+                
+        # se tiver if e else
+        elif len(tree.children) == 5:
+            if self.insideIf == False:
+                self.insideIf_acc.append(self.visit(tree.children[1]))
+                self.insideIf = True
+                self.visit(tree.children[2])
+
+                self.insideIf_acc = []
+                self.insideIf = False
+                self.visit(tree.children[4])
+            else:
+                self.visit_children(tree)
+
+        # se tiver elif's e/ou else
+        else:
+            # visitar if
+            self.insideIf_acc.append(self.visit(tree.children[1]))
+            self.insideIf = True
+            self.visit(tree.children[2])
+            
+            # visitar elif's, e se existir else
+            for i, child in enumerate(tree.children):
+                if isinstance(child,lark_lexer.Token) and child.type == "SENAO":
+                    self.insideIf_acc.append(self.visit(tree.children[i+1]))
+                    self.insideIf = True
+                    self.visit(tree.children[i+2])
+
+                elif isinstance(child,lark_lexer.Token) and child.type == "DEFEITO":
+                    self.insideIf_acc = []
+                    self.insideIf = False
+                    self.visit(tree.children[i+1])
 
     def se_expr(self, tree):
         print("Se_expr")
         variavel = self.visit_children(tree)[0]
+
+        list_expr = self.visit_children(tree)
+        expressao = [var.value if isinstance(var, lark_lexer.Token) else var for var in list_expr]
+        expressao = " ".join(expressao)
+
         k = []
         for values in reversed(self.dic.values()):
             for lista in values:
                 for key in lista.keys():
                     k.append(key[0])
         if variavel not in k:
-            print("Variável não declarada " + variavel)
-            return True
+            print("Variável não declarada " + variavel )
+        
+        return expressao
 
     def caso(self, tree):
         print("Caso")
@@ -309,6 +352,10 @@ Lista {self.vars['Lista']}
         return eval(expr)
 
     def term(self, tree):
+        return tree.children[0].value
+    
+    def OP(self, tree):
+        print(f"Operador: {tree}")
         return tree.children[0].value
 
 
@@ -384,12 +431,18 @@ fun main() {
     """
 
 ifs = """
-se 1 entao
+deixa x: Int = 5
+se x + 2 entao
     se 2 entao
         escreve "3"
-    defeito
-        escreve "naaaaaada"
     fim
+senao 3 entao   
+    se 4 entao
+        escreve "4"
+    fim
+    escreve "naaaaaada"
+defeito
+    escreve "naaaaaada"
 fim
 """
 
