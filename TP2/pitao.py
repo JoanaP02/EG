@@ -91,7 +91,7 @@ class MyInterpreter(Interpreter):
         self.controlo = False
         self.estruturas_controlo = 0
         
-        self.insideIf = False
+        self.ifCounter = 0
         
         # dic_info = { variáveis: [somaInt, somaSet, somaArray, somaTuplo, somaEstringue, somaLista],
         #              instrucoes : [declaracoes, atribuicoes, leitura, escrita, condicionais, cíclicas],
@@ -254,14 +254,14 @@ Lista {self.vars['Lista']}
 
     def se(self, tree):
         print("Se")
-        #if self.insideIf:
-        #    # ir aos filhos ver se existe um se com else ou elif
-        #    for child in tree.children:
-        #        if child.data == 'senao' or child.data == 'defeito':
-        #            print("AVISO: Condição Se sem Senao ou Defeito dentro de um Se")
-        #self.insideIf = True
+        if self.ifCounter > 0:
+            # ir aos filhos ver se existe um se com else ou elif
+            for child in tree.children:
+                if child.data == 'senao' or child.data == 'defeito':
+                    print("AVISO: Condição Se sem Senao ou Defeito dentro de um Se")
+        self.ifCounter += 1
         self.visit_children(tree)
-        self.insideIf = False
+        self.ifCounter -= 1
 
     def se_expr(self, tree):
         print("Se_expr")

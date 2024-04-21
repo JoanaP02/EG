@@ -3,6 +3,7 @@ from lark.tree import pydot__tree_to_png
 from lark.visitors import Interpreter
 import lark.tree as lark_tree
 import lark.lexer as lark_lexer
+from html import gen_html
 
 # FALTA
 # 4- COntar if dentro de if ou se/caso dentro de se/caso
@@ -86,7 +87,6 @@ class MyInterpreter(Interpreter):
 
         # Verifica se estamos dentro de uma estrutura de controlo
         self.controlo = False
-        self.estruturas_controlo = 0
         
         self.insideIf = False
         self.insideIf_acc = []
@@ -101,8 +101,9 @@ class MyInterpreter(Interpreter):
         # vars = {Int: 0, Set: 0, Array: 0, Tuplo: 0, Estringue: 0, Lista: 0}
         self.vars = {'Int': 0, 'Set': 0, 'Array': 0, 'Tuplo': 0, 'Estringue': 0, 'Lista': 0}
         self.instrucoes = {'declaracoes': 0, 'atribuicoes': 0, 'leitura': 0, 'escrita': 0, 'imprime': 0, 'condicionais': 0, 'ciclicas': 0}
-        #self.erros = {'variaveis_nao_declaradas': 0, 'variaveis_declaradas_nao_utilizadas': 0, 'variaveis_declaradas_nao_atribuidas': 0}
-        
+        self.estruturas_controlo = 0
+        self.erros = []
+        self.aviso = []
 
     def start(self, tree):
         self.dic[(None,'Global')] = []
@@ -113,7 +114,7 @@ class MyInterpreter(Interpreter):
         
         print("FInal")
         print(self.finalIfs)
-
+        gen_html(self.finalIfs, self.vars, self.instrucoes, self.estruturas_controlo, self.erros, self.aviso)
         return f"""Ints {self.vars['Int']}
 Set {self.vars['Set']}
 Array {self.vars['Array']}
@@ -135,6 +136,7 @@ Lista {self.vars['Lista']}
                 for key in lista.keys():
                     if lista[key] is None:
                         print("AVISO: Variável declarada mas não utilizada:", key[0])
+                        self.aviso.append(f"AVISO: Variável declarada mas não utilizada: {key[0]}")
         self.dic.popitem()
 
     def funcao(self, tree):
@@ -148,6 +150,7 @@ Lista {self.vars['Lista']}
                 for key in lista.keys():
                     if lista[key] is None:
                         print("AVISO: Variável declarada mas não utilizada:", key[0])
+                        self.aviso.append(f"AVISO: Variável declarada mas não utilizada: {key[0]}")
         self.dic.popitem()
 
     def parametros(self, tree): 
@@ -173,6 +176,7 @@ Lista {self.vars['Lista']}
                     print(tree.children[1])
                     if tree.children[1].value == key[0]:
                         print("ERRO: Variável já declarada")
+                        self.erros.append(f"ERRO: Variável já declarada: {key[0]}")
                         return False
 
         if len(tree.children) == 4:
@@ -204,7 +208,7 @@ Lista {self.vars['Lista']}
             self.insideIf = True
         else:
             if len(self.insideIf_acc) > 1:
-
+                # Devolve a expressão final do if
                 finalResult = " e ".join(self.insideIf_acc)+":"
                 before = self.insideIf_acc[0] + " , " + "".join([ i  for i in self.insideIf_acc[1:]])
                 self.finalIfs.append(before+" => "+finalResult)
@@ -220,19 +224,17 @@ Lista {self.vars['Lista']}
             # Check if x is equal to any of the IDs in the keys of the inner dictionary
             for list in inner_dict:
                 for key in list.keys():
-                    print(key[0])
-                    print(tree.children[0])
-                    print("AAAAAAAAA")
-                    print(list[key])
                     if key[0] == tree.children[0].value:
                         if list[key][0] != None and list[key][1] == 'const':
                             print("ERRO: Variável constante não pode ser alterada")
+                            self.erros.append(f"ERRO: Variável constante não pode ser alterada: {key[0]}")
                             return False
                         list[key] = (self.visit_children(tree)[1], list[key][1])
                         self.instrucoes['atribuicoes'] += 1
                         print(self.dic)
                         return True
         print("ERRO: Variável não declarada " + tree.children[0])
+        self.erros.append(f"ERRO: Variável não declarada {tree.children[0]}")
         return False
 
     def chamar(self, tree):
@@ -252,14 +254,14 @@ Lista {self.vars['Lista']}
         print("Imprime")
         self.instrucoes['imprime'] += 1
 
-    # def selecao(self, tree):
-    #     print("Selecao")
-    #     if self.controlo == True:
-    #         self.estruturas_controlo += 1
-    #     self.controlo = True
-    #     self.visit_children(tree)
-    #     self.instrucoes['condicionais'] += 1
-    #     self.controlo = False
+    def selecao(self, tree):
+        print("Selecao")
+        if self.controlo == True:
+            self.estruturas_controlo += 1
+        self.controlo = True
+        self.visit_children(tree)
+        self.instrucoes['condicionais'] += 1
+        self.controlo = False
 
     def se(self, tree):
         print("Se")
@@ -315,7 +317,7 @@ Lista {self.vars['Lista']}
                     k.append(key[0])
         if variavel not in k:
             print("Variável não declarada " + variavel )
-        
+            self.erros.append(f"ERRO: Variável não declarada: {variavel}")
         return expressao
 
     def caso(self, tree):
@@ -357,7 +359,6 @@ Lista {self.vars['Lista']}
     def OP(self, tree):
         print(f"Operador: {tree}")
         return tree.children[0].value
-
 
 frase1 = """
 classe Principal {
@@ -458,4 +459,27 @@ pydot__tree_to_png(tree,'lark_test.png')
 data = MyInterpreter().visit(tree)
 print(data)
 
+with open("pagHTML.html", "a") as html:
+    html.write("""
+        <div class="left-column">
+<code>deixa x: <span class="funcla">Int</span> = 5
+<span class="cond">se</span> x + 2 <span class="cond">entao</span>
+    <span class="cond">se</span> 2 <span class="cond">entao</span>
+        escreve "3"
+    <span class="cond">fim</span>
+<span class="cond">senao</span> 3 <span class="cond">entao</span>   
+    <span class="cond">se</span> 4 <span class="cond">entao</span>
+        escreve "4"
+    <span class="cond">fim</span>
+escreve "naaaaaada"
+<span class="cond">defeito</span>
+escreve "naaaaaada"
+<span class="cond">fim</span>
+</code>
+        </div>
+    </div>
+
+</body>
+
+</html>""")
 
