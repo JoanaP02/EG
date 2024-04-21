@@ -459,27 +459,27 @@ pydot__tree_to_png(tree,'lark_test.png')
 data = MyInterpreter().visit(tree)
 print(data)
 
-with open("pagHTML.html", "a") as html:
-    html.write("""
-        <div class="left-column">
-<code>deixa x: <span class="funcla">Int</span> = 5
-<span class="cond">se</span> x + 2 <span class="cond">entao</span>
-    <span class="cond">se</span> 2 <span class="cond">entao</span>
-        escreve "3"
-    <span class="cond">fim</span>
-<span class="cond">senao</span> 3 <span class="cond">entao</span>   
-    <span class="cond">se</span> 4 <span class="cond">entao</span>
-        escreve "4"
-    <span class="cond">fim</span>
-escreve "naaaaaada"
-<span class="cond">defeito</span>
-escreve "naaaaaada"
-<span class="cond">fim</span>
-</code>
-        </div>
-    </div>
+# with open("pagHTML.html", "a") as html:
+#     html.write("""
+#         <div class="left-column">
+# <code>deixa x: <span class="funcla">Int</span> = 5
+# <span class="cond">se</span> x + 2 <span class="cond">entao</span>
+#     <span class="cond">se</span> 2 <span class="cond">entao</span>
+#         escreve "3"
+#     <span class="cond">fim</span>
+# <span class="cond">senao</span> 3 <span class="cond">entao</span>   
+#     <span class="cond">se</span> 4 <span class="cond">entao</span>
+#         escreve "4"
+#     <span class="cond">fim</span>
+# escreve "naaaaaada"
+# <span class="cond">defeito</span>
+# escreve "naaaaaada"
+# <span class="cond">fim</span>
+# </code>
+#         </div>
+#     </div>
 
-</body>
+# </body>
 
-</html>""")
+# </html>""")
 
