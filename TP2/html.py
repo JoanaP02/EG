@@ -1,8 +1,10 @@
-def gen_html(ifs, vars, instrucoes, estruturas_controlo, erros, aviso):
+def gen_html(frase, ifs, vars, instrucoes, estruturas_controlo, erros, aviso):
     # Transforma a lista de condições em itens de lista HTML para a seção "Outros"
     ifs_html = "".join(f"<li>{condition}</li>" for condition in ifs)
-    # Transforma a lista de erros e avisos em itens de lista HTML
+    # Transforma a lista de erros em itens de lista HTML
     erros_html = "".join(f"<li>{error}</li>" for error in erros)
+    # Transforma a lista de avisos em itens de lista HTML
+    aviso_html = "".join(f"<li>{aviso}</li>" for aviso in aviso)
 
     # Cria o conteúdo HTML
     html = f'''<!DOCTYPE html>
@@ -17,10 +19,10 @@ def gen_html(ifs, vars, instrucoes, estruturas_controlo, erros, aviso):
             height: 100%;
             margin: 0;
             font-family: Arial, sans-serif;
-            color: #f0f0f0;
+            color: #8BAB92;
         }}
         .header {{
-            background-color: #4a4a4a;
+            background-color: #252525;
             padding: 20px;
             position: relative;
             text-align: center;
@@ -34,13 +36,6 @@ def gen_html(ifs, vars, instrucoes, estruturas_controlo, erros, aviso):
         }}
         .container {{
             display: flex;
-            flex-direction: column;
-            height: 100%;
-            background-color: #000000;
-        }}
-        .container2 {{
-            display: flex;
-            height: 100%;
             background-color: #000000;
         }}
         .left-column {{
@@ -48,7 +43,7 @@ def gen_html(ifs, vars, instrucoes, estruturas_controlo, erros, aviso):
             flex: 1;
             margin-left: 10px;
             margin-top: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             margin-right: 5px;
             border-radius: 5px;
             padding: 20px;
@@ -75,110 +70,91 @@ def gen_html(ifs, vars, instrucoes, estruturas_controlo, erros, aviso):
             margin-right: 10px;
             border-radius: 5px;
             padding: 20px;
-            color: #f0f0f0;
+            color: #8BAB92;
             position: relative;
         }}
-        .red {{
-            background-color: #2b0b00;
+        
+        .top {{
+            background-color: #1E1E1E;
             margin-top: 10px;
             margin-bottom: 5px;
         }}
-        .blue {{
-            background-color: #000035;
+        .middle {{
+            background-color: #1E1E1E;
             margin-top: 5px;
             margin-bottom: 5px;
+        }}
+        .bottom {{
+            background-color: #1E1E1E;
+            margin-top: 5px;
+            margin-bottom: 10px;
         }}
         .sub-box {{
             display: flex;
             justify-content: space-between;
-            padding: 10px;
         }}
         .variables, .instructions {{
-            background-color: #2b0b00;
+            background-color: #1E1E1E;
             flex: 1;
             margin: 5px;
             border-radius: 5px;
-            padding: 10px;
-            color: #f0f0f0;
-        }}
-        .footer {{
-            background-color: #4a4a4a;
-            padding: 20px;
-            text-align: center;
-            margin-top: 10px;
-            width: 100%;
-        }}
-        .purple {{
-            background-color: #2a002a;
-            margin-top: 5px;
-            margin-bottom: 10px;
+            color: #8BAB92;
         }}
     </style>
 </head>
 <body>
     <div class="header">
-        Pitão - O Python Tuga
+        <b>Pitão - O Python Tuga</b>
         <img src="static/cobra_logo.png" alt="Logo">
     </div>
     <div class="container">
-        <div class="container2">
-            <div class="left-column">
-                <!-- Substitua por seu trecho de código real -->
-                <code>deixa x: <span class="funcla">Int</span> = 5
-                <span class="cond">se</span> x + 2 <span class="cond">entao</span>
-                    <span class="cond">se</span> 2 <span class="cond">entao</span>
-                        escreve "3"
-                    <span class="cond">fim</span>
-                <span class="cond">senao</span> 3 <span class="cond">entao</span>   
-                    <span class="cond">se</span> 4 <span class="cond">entao</span>
-                        escreve "4"
-                    <span class="cond">fim</span>
-                escreve "naaaaaada"
-                <span class="cond">defeito</span>
-                escreve "naaaaaada"
-                <span class="cond">fim</span>
-                </code>
-            </div>
-            <div class="right-column">
-                <div class="box red sub-box">
-                    <div class="variables">
-                        Variáveis:
-                        <ul>
-                            <li>'Int': {vars['Int']}</li>
-                            <li>'Set': {vars['Set']}</li>
-                            <li>'Array': {vars['Array']}</li>
-                            <li>'Tuplo': {vars['Tuplo']}</li>
-                            <li>'Estringue': {vars['Estringue']}</li>
-                            <li>'Lista': {vars['Lista']}</li>
-                        </ul>
-                    </div>
-                    <div class="instructions">
-                        Instruções:
-                        <ul>
-                            <li>Declarações: {instrucoes['declaracoes']}</li>
-                            <li>Atribuições: {instrucoes['atribuicoes']}</li>
-                            <li>Leitura: {instrucoes['leitura']}</li>
-                            <li>Escrita: {instrucoes['escrita']}</li>
-                            <li>Imprime: {instrucoes['imprime']}</li>
-                            <li>Condicionais: {instrucoes['condicionais']}</li>
-                            <li>Cíclicas: {instrucoes['ciclicas']}</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="box blue">
-                    Erros e Avisos:
+        <div class="left-column">
+<code>{adicionarSpan(frase)}</code>
+        </div>
+        <div class="right-column">
+            <div class="box top sub-box">
+                <div class="variables">
+                    Variáveis:
                     <ul>
-                        {erros_html}
+                        <li>'Int': {vars['Int']}</li>
+                        <li>'Set': {vars['Set']}</li>
+                        <li>'Array': {vars['Array']}</li>
+                        <li>'Tuplo': {vars['Tuplo']}</li>
+                        <li>'Estringue': {vars['Estringue']}</li>
+                        <li>'Lista': {vars['Lista']}</li>
+                    </ul>
+                </div>
+                <div class="instructions">
+                    Instruções:
+                    <ul>
+                        <li>Declarações: {instrucoes['declaracoes']}</li>
+                        <li>Atribuições: {instrucoes['atribuicoes']}</li>
+                        <li>Leitura: {instrucoes['leitura']}</li>
+                        <li>Escrita: {instrucoes['escrita']}</li>
+                        <li>Imprime: {instrucoes['imprime']}</li>
+                        <li>Condicionais: {instrucoes['condicionais']}</li>
+                        <li>Cíclicas: {instrucoes['ciclicas']}</li>
                     </ul>
                 </div>
             </div>
-        </div>
-        <div class="footer">
-            <div class="box purple">
-                Outros:
+            <div class="box middle">
+                Erros e Avisos:
                 <ul>
-                    {ifs_html}
+                    {erros_html}
+                    {aviso_html}
                 </ul>
+            </div>
+            <div class="box bottom sub-box">
+                <div class="variables">
+                    Nº de Estruturas de Controlo aninhadas:
+                    {estruturas_controlo}
+                </div>
+                <div class="instructions">
+                    <em>Ifs</em> aninhados que se podiam juntar:
+                    <ul>
+                        {ifs_html}
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -188,3 +164,19 @@ def gen_html(ifs, vars, instrucoes, estruturas_controlo, erros, aviso):
     # Escreve o conteúdo HTML no arquivo pagHTML.html
     with open("pagHTML.html", "w", encoding="utf-8") as file:
         file.write(html)
+
+def adicionarSpan(frase):
+    frase = frase.replace(" fun ", "<span class='funcla'> fun </span>")
+    frase = frase.replace(" classe ", "<span class='funcla'> classe </span>")
+    frase = frase.replace(" deixa ", "<span class='funcla'> deixa </span>")
+    frase = frase.replace(" const ", "<span class='funcla'> const </span>")
+    frase = frase.replace(" entao ", "<span class='cond'> entao </span>")
+    frase = frase.replace(" senao ", "<span class='cond'> senao </span>")
+    frase = frase.replace(" defeito ", "<span class='cond'> defeito </span>")
+    frase = frase.replace(" corresponde ", "<span class='cond'> corresponde </span>")
+    frase = frase.replace(" enq ", "<span class='cond'> enq </span>")
+    frase = frase.replace(" ler ", "<span class='funcla'> ler </span>")
+    frase = frase.replace(" escreve ", "<span class='funcla'> escreve </span>")
+    frase = frase.replace(" fim ", "<span class='cond'> fim </span>")
+    frase = frase.replace(" se ", "<span class='cond'> se </span>")
+    return frase

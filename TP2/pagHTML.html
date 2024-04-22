@@ -10,10 +10,10 @@
             height: 100%;
             margin: 0;
             font-family: Arial, sans-serif;
-            color: #f0f0f0;
+            color: #8BAB92;
         }
         .header {
-            background-color: #4a4a4a;
+            background-color: #252525;
             padding: 20px;
             position: relative;
             text-align: center;
@@ -27,13 +27,6 @@
         }
         .container {
             display: flex;
-            flex-direction: column;
-            height: 100%;
-            background-color: #000000;
-        }
-        .container2 {
-            display: flex;
-            height: 100%;
             background-color: #000000;
         }
         .left-column {
@@ -41,7 +34,7 @@
             flex: 1;
             margin-left: 10px;
             margin-top: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             margin-right: 5px;
             border-radius: 5px;
             padding: 20px;
@@ -68,110 +61,130 @@
             margin-right: 10px;
             border-radius: 5px;
             padding: 20px;
-            color: #f0f0f0;
+            color: #8BAB92;
             position: relative;
         }
-        .red {
-            background-color: #2b0b00;
+        
+        .top {
+            background-color: #1E1E1E;
             margin-top: 10px;
             margin-bottom: 5px;
         }
-        .blue {
-            background-color: #000035;
+        .middle {
+            background-color: #1E1E1E;
             margin-top: 5px;
             margin-bottom: 5px;
+        }
+        .bottom {
+            background-color: #1E1E1E;
+            margin-top: 5px;
+            margin-bottom: 10px;
         }
         .sub-box {
             display: flex;
             justify-content: space-between;
-            padding: 10px;
         }
         .variables, .instructions {
-            background-color: #2b0b00;
+            background-color: #1E1E1E;
             flex: 1;
             margin: 5px;
             border-radius: 5px;
-            padding: 10px;
-            color: #f0f0f0;
-        }
-        .footer {
-            background-color: #4a4a4a;
-            padding: 20px;
-            text-align: center;
-            margin-top: 10px;
-            width: 100%;
-        }
-        .purple {
-            background-color: #2a002a;
-            margin-top: 5px;
-            margin-bottom: 10px;
+            color: #8BAB92;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        Pitão - O Python Tuga
+        <b>Pitão - O Python Tuga</b>
         <img src="static/cobra_logo.png" alt="Logo">
     </div>
     <div class="container">
-        <div class="container2">
-            <div class="left-column">
-                <!-- Substitua por seu trecho de código real -->
-                <code>deixa x: <span class="funcla">Int</span> = 5
-                <span class="cond">se</span> x + 2 <span class="cond">entao</span>
-                    <span class="cond">se</span> 2 <span class="cond">entao</span>
-                        escreve "3"
-                    <span class="cond">fim</span>
-                <span class="cond">senao</span> 3 <span class="cond">entao</span>   
-                    <span class="cond">se</span> 4 <span class="cond">entao</span>
-                        escreve "4"
-                    <span class="cond">fim</span>
-                escreve "naaaaaada"
-                <span class="cond">defeito</span>
-                escreve "naaaaaada"
-                <span class="cond">fim</span>
-                </code>
-            </div>
-            <div class="right-column">
-                <div class="box red sub-box">
-                    <div class="variables">
-                        Variáveis:
-                        <ul>
-                            <li>'Int': 1</li>
-                            <li>'Set': 0</li>
-                            <li>'Array': 0</li>
-                            <li>'Tuplo': 0</li>
-                            <li>'Estringue': 0</li>
-                            <li>'Lista': 0</li>
-                        </ul>
-                    </div>
-                    <div class="instructions">
-                        Instruções:
-                        <ul>
-                            <li>Declarações: 1</li>
-                            <li>Atribuições: 0</li>
-                            <li>Leitura: 0</li>
-                            <li>Escrita: 3</li>
-                            <li>Imprime: 0</li>
-                            <li>Condicionais: 0</li>
-                            <li>Cíclicas: 0</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="box blue">
-                    Erros e Avisos:
+        <div class="left-column">
+<code>
+classe Exemplo {
+   <span class='funcla'> const </span>VARIAVEL: Int
+
+   <span class='funcla'> fun </span>soma(a: Int, b: Int) => Int {
+        c = a + b
+    }
+
+   <span class='funcla'> fun </span>imprime_mensagem() {
+       <span class='funcla'> escreve </span>"Olá, mundo!"
+    }
+}
+
+fun main() {
+   <span class='funcla'> const </span>numero: Int = 10
+   <span class='funcla'> const </span>texto: Estringue = "Python"
+
+   <span class='cond'> se </span>numero > 0 entao
+       <span class='funcla'> escreve </span>"O número é positivo."
+   <span class='cond'> senao </span>numero < 0 entao
+       <span class='funcla'> escreve </span>"O número é negativo."
+   <span class='cond'> defeito </span>
+       <span class='funcla'> escreve </span>"O número é zero."
+   <span class='cond'> fim </span>
+
+   <span class='cond'> enq </span>numero > 0 fazer
+        imprime_mensagem()
+        numero = numero - 1
+
+
+   <span class='cond'> corresponde </span>numero com
+        caso 1 =>
+           <span class='funcla'> escreve </span>"Número é 1."
+        caso 2 =>
+           <span class='funcla'> escreve </span>"Número é 2."
+       <span class='cond'> defeito </span>=>
+           <span class='funcla'> escreve </span>"Número é diferente de 1 e 2."
+   <span class='cond'> fim </span>
+}
+    </code>
+        </div>
+        <div class="right-column">
+            <div class="box top sub-box">
+                <div class="variables">
+                    Variáveis:
                     <ul>
-                        <li>ERRO: Variável não declarada: 2</li><li>ERRO: Variável não declarada: 3</li><li>ERRO: Variável não declarada: 4</li>
+                        <li>'Int': 2</li>
+                        <li>'Set': 0</li>
+                        <li>'Array': 0</li>
+                        <li>'Tuplo': 0</li>
+                        <li>'Estringue': 1</li>
+                        <li>'Lista': 0</li>
+                    </ul>
+                </div>
+                <div class="instructions">
+                    Instruções:
+                    <ul>
+                        <li>Declarações: 3</li>
+                        <li>Atribuições: 0</li>
+                        <li>Leitura: 0</li>
+                        <li>Escrita: 4</li>
+                        <li>Imprime: 0</li>
+                        <li>Condicionais: 0</li>
+                        <li>Cíclicas: 1</li>
                     </ul>
                 </div>
             </div>
-        </div>
-        <div class="footer">
-            <div class="box purple">
-                Outros:
+            <div class="box middle">
+                Erros e Avisos:
                 <ul>
-                    <li>x + 2 , 2 => x + 2 e 2:</li><li>3 , 4 => 3 e 4:</li>
+                    <li>ERRO: Variável não declarada c</li><li>ERRO: Variável constante não pode ser alterada: numero</li>
+                    
                 </ul>
+            </div>
+            <div class="box bottom sub-box">
+                <div class="variables">
+                    Nº de Estruturas de Controlo aninhadas:
+                    0
+                </div>
+                <div class="instructions">
+                    <em>Ifs</em> aninhados que se podiam juntar:
+                    <ul>
+                        <li>numero > 0 , numero < 0 => numero > 0 e numero < 0:</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

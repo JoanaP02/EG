@@ -12,6 +12,9 @@ from html import gen_html
 #      If ...  \  /             If ...     \/          
 #               \/              Else ...   /\
 #                                         /  \
+#   If ....        /
+#   Else ....  \  /
+#      If ...   \/
 
 grammar2 = '''
 // Regras Sintaticas - Pitão
@@ -114,7 +117,7 @@ class MyInterpreter(Interpreter):
         
         print("FInal")
         print(self.finalIfs)
-        gen_html(self.finalIfs, self.vars, self.instrucoes, self.estruturas_controlo, self.erros, self.aviso)
+        gen_html(frase2, self.finalIfs, self.vars, self.instrucoes, self.estruturas_controlo, self.erros, self.aviso)
         return f"""Ints {self.vars['Int']}
 Set {self.vars['Set']}
 Array {self.vars['Array']}
@@ -373,9 +376,9 @@ classe Principal {
     z = 10
     se z > 0 entao
         main()
-    defeito
+    defeito 
         escreve "nope"
-    fim
+    fim 
 
     deixa x: Int = 5
     fun main() {
@@ -411,9 +414,9 @@ fun main() {
         escreve "O número é positivo."
     senao numero < 0 entao
         escreve "O número é negativo."
-    defeito
+    defeito 
         escreve "O número é zero."
-    fim
+    fim 
 
     enq numero > 0 fazer
         imprime_mensagem()
@@ -427,7 +430,7 @@ fun main() {
             escreve "Número é 2."
         defeito =>
             escreve "Número é diferente de 1 e 2."
-    fim
+    fim 
 }
     """
 
@@ -436,50 +439,24 @@ deixa x: Int = 5
 se x + 2 entao
     se 2 entao
         escreve "3"
-    fim
+    fim 
 senao 3 entao   
     se 4 entao
         escreve "4"
-    fim
+    fim 
     escreve "naaaaaada"
-defeito
+defeito 
     escreve "naaaaaada"
-fim
+fim 
 """
 
 
-
 p = Lark(grammar2) # cria um objeto parser
-pydot__tree_to_png(p.parse(ifs),'ifs.png')
+pydot__tree_to_png(p.parse(frase2),'ifs.png')
 
-tree = p.parse(ifs)  # retorna uma tree
+tree = p.parse(frase2)  # retorna uma tree
 #print(tree)
 #print(tree.pretty())
 pydot__tree_to_png(tree,'lark_test.png')
 data = MyInterpreter().visit(tree)
 print(data)
-
-# with open("pagHTML.html", "a") as html:
-#     html.write("""
-#         <div class="left-column">
-# <code>deixa x: <span class="funcla">Int</span> = 5
-# <span class="cond">se</span> x + 2 <span class="cond">entao</span>
-#     <span class="cond">se</span> 2 <span class="cond">entao</span>
-#         escreve "3"
-#     <span class="cond">fim</span>
-# <span class="cond">senao</span> 3 <span class="cond">entao</span>   
-#     <span class="cond">se</span> 4 <span class="cond">entao</span>
-#         escreve "4"
-#     <span class="cond">fim</span>
-# escreve "naaaaaada"
-# <span class="cond">defeito</span>
-# escreve "naaaaaada"
-# <span class="cond">fim</span>
-# </code>
-#         </div>
-#     </div>
-
-# </body>
-
-# </html>""")
-
