@@ -257,29 +257,37 @@ Lista {self.vars['Lista']}
         print("Imprime")
         self.instrucoes['imprime'] += 1
 
-    def selecao(self, tree):
-        print("Selecao")
-        if self.controlo == True:
-            self.estruturas_controlo += 1
-        self.controlo = True
-        self.visit_children(tree)
-        self.instrucoes['condicionais'] += 1
-        self.controlo = False
+    ### Deprecated
+    # def selecao(self, tree):
+    #     print("Selecao")
+    #     if self.controlo == True:
+    #         self.estruturas_controlo += 1
+    #     self.controlo = True
+    #     self.visit_children(tree)
+    #     self.controlo = False
 
     def se(self, tree):
         print("Se")
+        
+        if self.controlo == True:
+            self.estruturas_controlo += 1
+        self.instrucoes['condicionais'] += 1
+        
         if len(tree.children) == 3:
             self.insideIf_acc.append(self.visit(tree.children[1]))
             self.insideIf= True
+            self.controlo = True
             self.visit(tree.children[2])
+            self.controlo = False
                 
         # se tiver if e else
         elif len(tree.children) == 5:
             if self.insideIf == False:
                 self.insideIf_acc.append(self.visit(tree.children[1]))
                 self.insideIf = True
+                self.controlo = True
                 self.visit(tree.children[2])
-
+                self.controlo = False
                 self.insideIf_acc = []
                 self.insideIf = False
                 self.visit(tree.children[4])
@@ -291,6 +299,7 @@ Lista {self.vars['Lista']}
             # visitar if
             self.insideIf_acc.append(self.visit(tree.children[1]))
             self.insideIf = True
+            self.controlo = True
             self.visit(tree.children[2])
             
             # visitar elif's, e se existir else
@@ -298,12 +307,15 @@ Lista {self.vars['Lista']}
                 if isinstance(child,lark_lexer.Token) and child.type == "SENAO":
                     self.insideIf_acc.append(self.visit(tree.children[i+1]))
                     self.insideIf = True
+                    self.controlo = True
                     self.visit(tree.children[i+2])
 
                 elif isinstance(child,lark_lexer.Token) and child.type == "DEFEITO":
                     self.insideIf_acc = []
                     self.insideIf = False
+                    self.controlo = False
                     self.visit(tree.children[i+1])
+        
 
     def se_expr(self, tree):
         print("Se_expr")
@@ -325,7 +337,13 @@ Lista {self.vars['Lista']}
 
     def caso(self, tree):
         print("Caso")
-        pass
+        self.instrucoes['condicionais'] += 1
+        if self.controlo == True:
+            self.estruturas_controlo += 1
+        self.controlo = True
+        self.visit_children(tree)
+        self.controlo = False
+
 
     def repeticao(self, tree):
         print("Repeticao")
@@ -338,23 +356,27 @@ Lista {self.vars['Lista']}
 
     def enq_fazer(self, tree):
         print("Enq_fazer")
-        pass
+        self.visit_children(tree)
+
 
     def repetir_ate(self, tree):
         print("Repetir_ate")
-        pass
+        self.visit_children(tree)
+
 
     def expr(self, tree):
         expr = ''
         print("Expr")
         for i, child in enumerate(tree.children):
+            #print (child)
             if i == 0 or i % 2 == 0:
                 num = child.children[0]
                 expr += num
             else:
                 op = child
                 expr += op
-        return eval(expr)
+        print(expr)
+        return expr
 
     def term(self, tree):
         return tree.children[0].value
@@ -407,11 +429,15 @@ classe Exemplo {
 }
 
 fun main() {
-    const numero: Int = 10
+    deixa numero: Int = 10
+    deixa x: Int = 5
+
     const texto: Estringue = "Python"
 
     se numero > 0 entao
-        escreve "O número é positivo."
+        se numero > 5 entao
+            escreve "O número é positivo."
+        fim
     senao numero < 0 entao
         escreve "O número é negativo."
     defeito 
@@ -421,11 +447,13 @@ fun main() {
     enq numero > 0 fazer
         imprime_mensagem()
         numero = numero - 1
+    
+    x = 20
 
 
     corresponde numero com
         caso 1 =>
-            escreve "Número é 1."
+            x = 10
         caso 2 =>
             escreve "Número é 2."
         defeito =>
@@ -452,7 +480,7 @@ fim
 
 
 p = Lark(grammar2) # cria um objeto parser
-pydot__tree_to_png(p.parse(frase2),'ifs.png')
+pydot__tree_to_png(p.parse(frase2),'lark_test.png')
 
 tree = p.parse(frase2)  # retorna uma tree
 #print(tree)

@@ -308,6 +308,7 @@ Lista {self.vars['Lista']}
                 expr += op
         return eval(expr)
 
+
     def term(self, tree):
         return tree.children[0].value
 
