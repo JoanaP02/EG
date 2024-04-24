@@ -95,89 +95,65 @@ class MyInterpreter(Interpreter):
         self.aviso = []
 
     def start(self, tree):
-        self.dic_vars_vars[(None,'Global')] = []
-        print(self.dic_vars_vars)
-
-        for child in tree.children:
-            print(self.visit(child))
-        
-        print("FInal")
-        print(self.finalIfs)
-        gen_html(frase1, self.finalIfs, self.vars, self.instrucoes, self.estruturas_controlo, self.erros, self.aviso)
+        self.dic_vars[(None,'Global')] = []
+        self.visit_children(tree)
+        gen_html(frase, self.finalIfs, self.vars, self.instrucoes, self.estruturas_controlo, self.erros, self.aviso)
         
 
     def classe(self, tree):
-        print("Classe")
-        #  Token('ID', 'Principal') -  type esquerda, value direita
-        # visit children
-        self.dic_vars_vars[('Classe',tree.children[0].value)] = []
-        print(self.dic_vars_vars)
+        self.dic_vars[('Classe',tree.children[0].value)] = []
+
         self.visit_children(tree)
         # Verificar variáveis declaradas mas não utilizadas
-        for values in self.dic_vars_vars.values():
+        for values in self.dic_vars.values():
             for lista in values:
                 for key in lista.keys():
                     if lista[key][0] is None:
-                        print("AVISO: Variável declarada mas não utilizada:", key[0])
                         self.aviso.append(f"AVISO: Variável declarada mas não utilizada: {key[0]}")
-        self.dic_vars_vars.popitem()
+        self.dic_vars.popitem()
 
     def funcao(self, tree):
-        print("Funcao")
-        self.dic_vars_vars[('Funcao',tree.children[0].value)] = []
-        print(self.dic_vars_vars)
+        self.dic_vars[('Funcao',tree.children[0].value)] = []
         self.visit_children(tree)
         # Verificar variáveis declaradas mas não utilizadas
-        for values in self.dic_vars_vars.values():
+        for values in self.dic_vars.values():
             for lista in values:
                 for key in lista.keys():
                     if lista[key][0] is None:
-                        print("AVISO: Variável declarada mas não utilizada:", key[0])
                         self.aviso.append(f"AVISO: Variável declarada mas não utilizada: {key[0]}")
-        self.dic_vars_vars.popitem()
+        self.dic_vars.popitem()
 
     def parametros(self, tree): 
         self.visit_children(tree)
 
     def parametro(self, tree):
-        # TO-DO check if parameter is used
-        # TO-DO check if there are parameters with the same name
         self.visit_children(tree)
 
     def decls(self, tree):
         self.visit_children(tree)
 
     def decl(self, tree):
-        # dic {(scope, ID): (tipo, valor)}
-        print("Decl")
 
         # verificar se foi declarado
-        for values in reversed(self.dic_vars_vars.values()):
+        for values in reversed(self.dic_vars.values()):
             for lista in values:
                 for key in lista.keys():
-                    print(key[0])
-                    print(tree.children[1])
                     if tree.children[1].value == key[0]:
-                        print("ERRO: Variável já declarada")
                         self.erros.append(f"ERRO: Variável já declarada: {key[0]}")
                         return False
 
         if len(tree.children) == 4:
-        # deixa x: Int = 5
             criancas = self.visit_children(tree)
             last_key = list(self.dic_vars.keys())[-1] if self.dic_vars else None
             novo = {(tree.children[1].value, criancas[2]): (criancas[3], criancas[0])}
             self.dic_vars[last_key].append(novo)
-            print(self.dic_vars)
         else: 
             criancas = self.visit_children(tree)
             last_key = list(self.dic_vars.keys())[-1] if self.dic_vars else None
-            #self.dic_vars[self.scopes, tree.children[1].value] = (criancas[2], None)
             novo = {(tree.children[1].value, criancas[2]): (None, criancas[0])}
             self.dic_vars[last_key].append(novo)
         self.vars[criancas[2]] += 1
         self.instrucoes['declaracoes'] += 1
-        print(self.dic_vars)
 
     def var(self, tree):
         return tree.children[0].value
@@ -186,12 +162,10 @@ class MyInterpreter(Interpreter):
         return tree.children[0].value
 
     def inst(self, tree):
-        print("Inst")
         if self.insideIf and len(tree.children) == 1 and tree.children[0].data == 'se':
             self.insideIf = True
         else:
             if len(self.insideIf_acc) > 1:
-                # Devolve a expressão final do if
                 finalResult = " e ".join(self.insideIf_acc)+":"
                 before = self.insideIf_acc[0] + " , " + "".join([ i  for i in self.insideIf_acc[1:]])
                 self.finalIfs.append(before+" => "+finalResult)
@@ -200,23 +174,16 @@ class MyInterpreter(Interpreter):
         self.visit_children(tree)
 
     def atribuicao(self, tree):
-        print("Atribuicao")
-        print(tree.children)
-        # Iterate over the dictionary values
         for inner_dict in self.dic_vars.values():
-            # Check if x is equal to any of the IDs in the keys of the inner dictionary
             for list in inner_dict:
                 for key in list.keys():
                     if key[0] == tree.children[0].value:
                         if list[key][0] != None and list[key][1] == 'const':
-                            print("ERRO: Variável constante não pode ser alterada")
                             self.erros.append(f"ERRO: Variável constante não pode ser alterada: {key[0]}")
                             return False
                         list[key] = (self.visit_children(tree)[1], list[key][1])
                         self.instrucoes['atribuicoes'] += 1
-                        print(self.dic_vars)
                         return True
-        print("ERRO: Variável não declarada " + tree.children[0])
         self.erros.append(f"ERRO: Variável não declarada {tree.children[0]}")
         return False
 
@@ -224,30 +191,17 @@ class MyInterpreter(Interpreter):
         pass    
 
     def ler(self, tree):
-        print("Ler")
         self.instrucoes['leitura'] += 1
         pass
 
     def escreve(self, tree):
-        print("Escreve")
         self.instrucoes['escrita'] += 1
         pass
 
     def imprime(self, tree):
-        print("Imprime")
         self.instrucoes['imprime'] += 1
 
-    ### Deprecated
-    # def selecao(self, tree):
-    #     print("Selecao")
-    #     if self.controlo == True:
-    #         self.estruturas_controlo += 1
-    #     self.controlo = True
-    #     self.visit_children(tree)
-    #     self.controlo = False
-
     def se(self, tree):
-        print("Se")
         
         if self.controlo == True:
             self.estruturas_controlo += 1
@@ -298,7 +252,6 @@ class MyInterpreter(Interpreter):
         
 
     def se_expr(self, tree):
-        print("Se_expr")
         variavel = self.visit_children(tree)[0]
 
         list_expr = self.visit_children(tree)
@@ -311,12 +264,10 @@ class MyInterpreter(Interpreter):
                 for key in lista.keys():
                     k.append(key[0])
         if variavel not in k:
-            print("Variável não declarada " + variavel )
             self.erros.append(f"ERRO: Variável não declarada: {variavel}")
         return expressao
 
     def caso(self, tree):
-        print("Caso")
         self.instrucoes['condicionais'] += 1
         if self.controlo == True:
             self.estruturas_controlo += 1
@@ -326,7 +277,6 @@ class MyInterpreter(Interpreter):
 
 
     def repeticao(self, tree):
-        print("Repeticao")
         if self.controlo == True:
             self.estruturas_controlo += 1
         self.controlo = True
@@ -335,96 +285,69 @@ class MyInterpreter(Interpreter):
         self.controlo = False
 
     def enq_fazer(self, tree):
-        print("Enq_fazer")
         self.visit_children(tree)
 
 
     def repetir_ate(self, tree):
-        print("Repetir_ate")
         self.visit_children(tree)
 
 
     def expr(self, tree):
         expr = ''
-        print("Expr")
         for i, child in enumerate(tree.children):
-            #print (child)
             if i == 0 or i % 2 == 0:
                 num = child.children[0]
                 expr += num
             else:
                 op = child
                 expr += op
-        print(expr)
         return expr
 
     def term(self, tree):
         return tree.children[0].value
     
     def OP(self, tree):
-        print(f"Operador: {tree}")
         return tree.children[0].value
 
 frase1 = """
 classe Principal {
+    deixa x: Int = 10
     fun Principal() {
+        deixa w: Estringue
         deixa x: Int = 5
+        deixa z: Int = 10
     }
-    deixa x: Int
     const y: Int = 5
-    const z: Int
-    x = 5+6
     y = 6
     z = 10
-    se z > 0 entao
-        main()
-    defeito 
-        escreve "nope"
-    fim 
-
-    deixa x: Int = 5
-    fun main() {
-        escreve "Hello, World!"
-    }
 }
 
-classe Secundaria {
-    fun Principal() {
-        deixa x: Int = 5
-    }
-}
 """
 
 frase2 = """
-classe Exemplo {
-    const VARIAVEL: Int
-
-    fun soma(a: Int, b: Int) => Int {
-        c = a + b
-    }
-
-    fun imprime_mensagem() {
-        escreve "Olá, mundo!"
-    }
-}
 
 fun main() {
     deixa numero: Int = 10
-    deixa x: Int = 5
-
-    const texto: Estringue = "Python"
+    deixa x: Int = 10
 
     se numero > 0 entao
         se numero > 5 entao
-            escreve "O número é positivo."
+            escreve "O número é positivo e maior que 5."
         fim
-    senao numero < 0 entao
-        escreve "O número é negativo."
+    senao numero < 2 entao
+        se numero < 0 entao
+            escreve "O número é negativo e menor que -5."  
+        fim    
     defeito 
         escreve "O número é zero."
     fim 
 
     enq numero > 0 fazer
+        se numero > 5 entao
+            imprime "Número é positivo e maior que 5."
+        defeito
+            imprime "Número é positivo e menor ou igual a 5."
+        fim
         imprime_mensagem()
         numero = numero - 1
     
@@ -433,7 +356,9 @@ fun main() {
 
     corresponde numero com
         caso 1 =>
-            x = 10
+            se numero > 0 entao
+                x = 10
+            fim
         caso 2 =>
             escreve "Número é 2."
         defeito =>
@@ -442,29 +367,13 @@ fun main() {
 }
     """
 
-ifs = """
-deixa x: Int = 5
-se x + 2 entao
-    se 2 entao
-        escreve "3"
-    fim 
-senao 3 entao   
-    se 4 entao
-        escreve "4"
-    fim 
-    escreve "naaaaaada"
-defeito 
-    escreve "naaaaaada"
-fim 
-"""
-
 
 p = Lark(grammar2) # cria um objeto parser
-pydot__tree_to_png(p.parse(frase1),'lark_test.png')
 
-tree = p.parse(frase1)  # retorna uma tree
-#print(tree)
-#print(tree.pretty())
+frase = frase2
+pydot__tree_to_png(p.parse(frase),'lark_test.png')
+
+tree = p.parse(frase)  # retorna uma tree
+
 pydot__tree_to_png(tree,'lark_test.png')
 data = MyInterpreter().visit(tree)
-print(data)
