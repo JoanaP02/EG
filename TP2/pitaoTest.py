@@ -117,7 +117,7 @@ class MyInterpreter(Interpreter):
         
         print("FInal")
         print(self.finalIfs)
-        gen_html(frase2, self.finalIfs, self.vars, self.instrucoes, self.estruturas_controlo, self.erros, self.aviso)
+        gen_html(frase1, self.finalIfs, self.vars, self.instrucoes, self.estruturas_controlo, self.erros, self.aviso)
         return f"""Ints {self.vars['Int']}
 Set {self.vars['Set']}
 Array {self.vars['Array']}
@@ -480,9 +480,9 @@ fim
 
 
 p = Lark(grammar2) # cria um objeto parser
-pydot__tree_to_png(p.parse(frase2),'lark_test.png')
+pydot__tree_to_png(p.parse(frase1),'lark_test.png')
 
-tree = p.parse(frase2)  # retorna uma tree
+tree = p.parse(frase1)  # retorna uma tree
 #print(tree)
 #print(tree.pretty())
 pydot__tree_to_png(tree,'lark_test.png')

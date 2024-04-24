@@ -101,94 +101,77 @@
     <div class="container">
         <div class="left-column">
 <code>
-classe Exemplo {
-   <span class='funcla'> const </span>VARIAVEL: Int
-
-   <span class='funcla'> fun </span>soma(a: Int, b: Int) => Int {
-        c = a + b
+classe Principal {
+   <span class='funcla'> fun </span>Principal() {
+       <span class='funcla'> deixa </span>x: Int = 5
     }
-
-   <span class='funcla'> fun </span>imprime_mensagem() {
-       <span class='funcla'> escreve </span>"Olá, mundo!"
-    }
-}
-
-fun main() {
-   <span class='funcla'> deixa </span>numero: Int = 10
-   <span class='funcla'> deixa </span>x: Int = 5
-
-   <span class='funcla'> const </span>texto: Estringue = "Python"
-
-   <span class='cond'> se </span>numero > 0 entao
-       <span class='cond'> se </span>numero > 5 entao
-           <span class='funcla'> escreve </span>"O número é positivo."
-        fim
-   <span class='cond'> senao </span>numero < 0 entao
-       <span class='funcla'> escreve </span>"O número é negativo."
+   <span class='funcla'> deixa </span>x: Int
+   <span class='funcla'> const </span>y: Int = 5
+   <span class='funcla'> const </span>z: Int
+    x = 5+6
+    y = 6
+    z = 10
+   <span class='cond'> se </span>z > 0 entao
+        main()
    <span class='cond'> defeito </span>
-       <span class='funcla'> escreve </span>"O número é zero."
+       <span class='funcla'> escreve </span>"nope"
    <span class='cond'> fim </span>
 
-   <span class='cond'> enq </span>numero > 0 fazer
-        imprime_mensagem()
-        numero = numero - 1
-    
-    x = 20
-
-
-   <span class='cond'> corresponde </span>numero com
-        caso 1 =>
-            x = 10
-        caso 2 =>
-           <span class='funcla'> escreve </span>"Número é 2."
-       <span class='cond'> defeito </span>=>
-           <span class='funcla'> escreve </span>"Número é diferente de 1 e 2."
-   <span class='cond'> fim </span>
+   <span class='funcla'> deixa </span>x: Int = 5
+   <span class='funcla'> fun </span>main() {
+       <span class='funcla'> escreve </span>"Hello, World!"
+    }
 }
-    </code>
+
+classe Secundaria {
+   <span class='funcla'> fun </span>Principal() {
+       <span class='funcla'> deixa </span>x: Int = 5
+    }
+}
+</code>
         </div>
         <div class="right-column">
             <div class="box top sub-box">
                 <div class="variables">
                     Variáveis:
                     <ul>
-                        <li>'Int': 3</li>
+                        <li>'Int': 5</li>
                         <li>'Set': 0</li>
                         <li>'Array': 0</li>
                         <li>'Tuplo': 0</li>
-                        <li>'Estringue': 1</li>
+                        <li>'Estringue': 0</li>
                         <li>'Lista': 0</li>
                     </ul>
                 </div>
                 <div class="instructions">
                     Instruções:
                     <ul>
-                        <li>Declarações: 4</li>
-                        <li>Atribuições: 3</li>
+                        <li>Declarações: 5</li>
+                        <li>Atribuições: 2</li>
                         <li>Leitura: 0</li>
-                        <li>Escrita: 6</li>
+                        <li>Escrita: 2</li>
                         <li>Imprime: 0</li>
-                        <li>Condicionais: 3</li>
-                        <li>Cíclicas: 1</li>
+                        <li>Condicionais: 1</li>
+                        <li>Cíclicas: 0</li>
                     </ul>
                 </div>
             </div>
             <div class="box middle">
                 Erros e Avisos:
                 <ul>
-                    <li>ERRO: Variável não declarada c</li>
+                    <li>ERRO: Variável constante não pode ser alterada: y</li><li>ERRO: Variável já declarada: x</li>
                     
                 </ul>
             </div>
             <div class="box bottom sub-box">
                 <div class="variables">
                     Nº de Estruturas de Controlo aninhadas:
-                    1
+                    0
                 </div>
                 <div class="instructions">
                     <em>Ifs</em> aninhados que se podiam juntar:
                     <ul>
-                        <li>numero > 0 , numero > 5 => numero > 0 e numero > 5:</li>
+                        
                     </ul>
                 </div>
             </div>
