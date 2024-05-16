@@ -3,7 +3,8 @@ from lark.tree import pydot__tree_to_png
 from lark.visitors import Interpreter
 import lark.tree as lark_tree
 import lark.lexer as lark_lexer
-from html import gen_html
+from gen_html import gen_html
+
 
 
 grammar2 = '''
@@ -22,6 +23,7 @@ decl: var ID ":" tipo ("=" expr)?
 var: DEIXA | CONST
 tipo: INT | SET | ARRAY | TUPLO | ESTRINGUE | LISTA
 
+insts: inst+
 inst: atribuicao | chamar | ler | escreve | imprime | se | repeticao | caso
 
 atribuicao: ID "=" expr
@@ -30,13 +32,13 @@ ler: "ler" ID
 escreve: "escreve" expr
 imprime: "imprime" expr
 
-se: SE se_expr "entao" inst+(SENAO se_expr "entao" inst+)* (DEFEITO inst+)? "fim"
-caso: CORRESPONDE expr "com" (CASO expr "=>" inst+ ("break")?)+ (DEFEITO "=>" inst+)? "fim"
+se: SE se_expr "entao" insts(SENAO se_expr "entao" insts)* (DEFEITO insts)? "fim"
+caso: CORRESPONDE expr "com" (CASO expr "=>" insts ("break")?)+ (DEFEITO "=>" insts)? "fim"
 
 repeticao: enq_fazer | repetir_ate
 
-enq_fazer: "enq" se_expr "fazer" inst+
-repetir_ate: "fazer" inst+ "ate" se_expr
+enq_fazer: "enq" se_expr "fazer" insts "fim"
+repetir_ate: "fazer" insts "ate" se_expr "fim"
 
 expr: term (OP term)*
 se_expr: term (OP term)* (OUTRO term (OP term)*)*
@@ -93,12 +95,37 @@ class MyInterpreter(Interpreter):
         self.estruturas_controlo = 0
         self.erros = []
         self.aviso = []
+        
+        self.formas = []
+        self.ultima_visita = []
+        
+        self.dot = ''
+
+    def adicionar_grafico(self, estringue):
+        condicoes = ["se", "corresponde", "enq", "fazer"]
+        
+        if self.ultima_visita == []:
+            self.dot += f'inicio -> "{estringue}"\n'
+            if estringue in condicoes:
+                if estringue not in self.formas:
+                    self.formas += [estringue]
+        else:
+            for visita in self.ultima_visita:
+                self.dot += f'"{visita}" -> "{estringue}"\n'
+                if estringue.split()[0] in condicoes:
+                    if estringue not in self.formas:
+                        self.formas += [estringue]
+        self.ultima_visita = []
+
+    def adicionar_formas(self):
+        for estringue in self.formas:
+            self.dot += f'"{estringue}" [shape=diamond];\n'
 
     def start(self, tree):
         self.dic_vars[(None,'Global')] = []
         self.visit_children(tree)
         gen_html(frase, self.finalIfs, self.vars, self.instrucoes, self.estruturas_controlo, self.erros, self.aviso)
-        
+        print(self.dot)
 
     def classe(self, tree):
         self.dic_vars[('Classe',tree.children[0].value)] = []
@@ -113,6 +140,7 @@ class MyInterpreter(Interpreter):
         self.dic_vars.popitem()
 
     def funcao(self, tree):
+        self.dot += f'digraph {tree.children[0].value} {{ \n'
         self.dic_vars[('Funcao',tree.children[0].value)] = []
         self.visit_children(tree)
         # Verificar variáveis declaradas mas não utilizadas
@@ -122,6 +150,11 @@ class MyInterpreter(Interpreter):
                     if lista[key][0] is None:
                         self.aviso.append(f"AVISO: Variável declarada mas não utilizada: {key[0]}")
         self.dic_vars.popitem()
+        for visita in self.ultima_visita:
+            self.dot += f'"{visita}" -> "fim"\n'
+            self.adicionar_formas()
+            self.dot += '}'
+        
 
     def parametros(self, tree): 
         self.visit_children(tree)
@@ -133,7 +166,6 @@ class MyInterpreter(Interpreter):
         self.visit_children(tree)
 
     def decl(self, tree):
-
         # verificar se foi declarado
         for values in reversed(self.dic_vars.values()):
             for lista in values:
@@ -142,24 +174,31 @@ class MyInterpreter(Interpreter):
                         self.erros.append(f"ERRO: Variável já declarada: {key[0]}")
                         return False
 
+        criancas = self.visit_children(tree)
+        last_key = list(self.dic_vars.keys())[-1] if self.dic_vars else None
         if len(tree.children) == 4:
-            criancas = self.visit_children(tree)
-            last_key = list(self.dic_vars.keys())[-1] if self.dic_vars else None
             novo = {(tree.children[1].value, criancas[2]): (criancas[3], criancas[0])}
             self.dic_vars[last_key].append(novo)
-        else: 
-            criancas = self.visit_children(tree)
-            last_key = list(self.dic_vars.keys())[-1] if self.dic_vars else None
+            var, id, tipo, expr = criancas
+            estringue = f" {var} {id}: {tipo} = {expr}"
+        else:
             novo = {(tree.children[1].value, criancas[2]): (None, criancas[0])}
             self.dic_vars[last_key].append(novo)
+            var, id , tipo = criancas
+            estringue = f" {var} {id}: {tipo}"
         self.vars[criancas[2]] += 1
         self.instrucoes['declaracoes'] += 1
+        self.adicionar_grafico(estringue)
+        self.ultima_visita.append(estringue)
 
     def var(self, tree):
         return tree.children[0].value
 
     def tipo(self, tree):
         return tree.children[0].value
+
+    def insts(self, tree):
+        self.visit_children(tree)
 
     def inst(self, tree):
         if self.insideIf and len(tree.children) == 1 and tree.children[0].data == 'se':
@@ -183,6 +222,8 @@ class MyInterpreter(Interpreter):
                             return False
                         list[key] = (self.visit_children(tree)[1], list[key][1])
                         self.instrucoes['atribuicoes'] += 1
+                        self.adicionar_grafico(f"{key[0]} = {list[key][0]}")
+                        self.ultima_visita.append(f"{key[0]} = {list[key][0]}")
                         return True
         self.erros.append(f"ERRO: Variável não declarada {tree.children[0]}")
         return False
@@ -208,29 +249,49 @@ class MyInterpreter(Interpreter):
         self.instrucoes['condicionais'] += 1
         
         if len(tree.children) == 3:
+            expr = self.visit(tree.children[1])
+            self.adicionar_grafico(f"se {expr}")
+            self.ultima_visita.append(f"se {expr}")
+            # self.adicionar_grafico(f"{se} {expr} {inst}")
             self.insideIf_acc.append(self.visit(tree.children[1]))
             self.insideIf= True
             self.controlo = True
             self.visit(tree.children[2])
+            ultimo = self.ultima_visita[-1]
             self.controlo = False
-                
+            self.ultima_visita.append(f"se {expr}")
+        
         # se tiver if e else
         elif len(tree.children) == 5:
             if self.insideIf == False:
+                expr = self.visit(tree.children[1])
+                self.adicionar_grafico(f"se {expr}")
+                self.ultima_visita.append(f"se {expr}")
                 self.insideIf_acc.append(self.visit(tree.children[1]))
                 self.insideIf = True
                 self.controlo = True
                 self.visit(tree.children[2])
+                ultimo = self.ultima_visita
+                self.ultima_visita = [f"se {expr}"]
                 self.controlo = False
                 self.insideIf_acc = []
                 self.insideIf = False
                 self.visit(tree.children[4])
             else:
+                expr = self.visit(tree.children[1])
+                self.adicionar_grafico(f"se {expr}")
+                self.ultima_visita.append(f"se {expr}")
                 self.visit_children(tree)
+                ultimo = self.ultima_visita
+                self.ultima_visita = [f"se {expr}"]
+            self.ultima_visita.extend(ultimo)
 
         # se tiver elif's e/ou else
         else:
             # visitar if
+            expr = self.visit(tree.children[1])
+            self.adicionar_grafico(f"se {expr}")
+            self.ultima_visita.append(f"se {expr}")
             self.insideIf_acc.append(self.visit(tree.children[1]))
             self.insideIf = True
             self.controlo = True
@@ -249,7 +310,7 @@ class MyInterpreter(Interpreter):
                     self.insideIf = False
                     self.controlo = False
                     self.visit(tree.children[i+1])
-        
+            self.ultima_visita.append(f"se {expr}")
 
     def se_expr(self, tree):
         variavel = self.visit_children(tree)[0]
@@ -285,8 +346,13 @@ class MyInterpreter(Interpreter):
         self.controlo = False
 
     def enq_fazer(self, tree):
-        self.visit_children(tree)
-
+        expr = self.visit(tree.children[0])
+        self.adicionar_grafico(f"enq {expr}")
+        self.ultima_visita.append(f"enq {expr}")
+        self.visit(tree.children[1])
+        self.ultima_visita
+        self.adicionar_grafico(f"enq {expr}")
+        self.ultima_visita.append(f"enq {expr}")
 
     def repetir_ate(self, tree):
         self.visit_children(tree)
@@ -310,19 +376,26 @@ class MyInterpreter(Interpreter):
         return tree.children[0].value
 
 frase1 = """
-classe Principal {
-    deixa x: Int = 10
-    fun Principal() {
-        deixa w: Estringue
-        deixa x: Int = 5
-        deixa z: Int = 10
-    }
-    const y: Int = 5
-    y = 6
-    z = 10
+fun Principal() {
+    deixa x: Int = 5
+    deixa z: Int
+    enq 5 > 3 fazer
+        z = 5
+        x = 4
+        enq 2 > 1 fazer
+            z = 2
+            se 2 > 0 entao
+                z = 1
+            defeito
+                z = 0
+            fim
+        fim
+    fim
+    deixa y: Int = 5 + 3
 }
 
 """
+
 
 frase2 = """
 
@@ -370,10 +443,7 @@ fun main() {
 
 p = Lark(grammar2) # cria um objeto parser
 
-frase = frase2
-pydot__tree_to_png(p.parse(frase),'lark_test.png')
-
+frase = frase1
 tree = p.parse(frase)  # retorna uma tree
-
-pydot__tree_to_png(tree,'lark_test.png')
+pydot__tree_to_png(tree,'frase1.png')
 data = MyInterpreter().visit(tree)
