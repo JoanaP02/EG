@@ -10,7 +10,7 @@ import graphviz
 
 grammar2 = '''
 // Regras Sintaticas - Pitão
-start: (classe | funcao | decls | inst)+
+start: (classe | funcao | decls | insts)+
 
 classe: "classe" ID ACHA (funcao | decls | inst)* FCHA
 
@@ -197,6 +197,8 @@ class MyInterpreter(Interpreter):
             novo = {(tree.children[1].value, criancas[2]): (criancas[3], criancas[0])}
             self.dic_vars[last_key].append(novo)
             var, id, tipo, expr = criancas
+            if expr[0] == '"' and expr[-1] == '"':
+                expr = f"'{expr[1:-1]}'"
             estringue = f" {var} {id}: {tipo} = {expr}"
         else:
             novo = {(tree.children[1].value, criancas[2]): (None, criancas[0])}
@@ -240,6 +242,8 @@ class MyInterpreter(Interpreter):
                             return False
                         list[key] = (self.visit_children(tree)[1], list[key][1])
                         self.instrucoes['atribuicoes'] += 1
+                        if (list[key][0])[0] == '"' and (list[key][0])[-1] == '"':
+                            list[key] = (f"'{list[key][0][1:-1]}'", list[key][1])
                         self.adicionar_grafico(f"{key[0]} = {list[key][0]}")
                         self.ultima_visita.append(f"{key[0]} = {list[key][0]}")
                         retorno = f"{key[0]} = {list[key][0]}"
@@ -257,8 +261,10 @@ class MyInterpreter(Interpreter):
     def escreve(self, tree):
         self.instrucoes['escrita'] += 1
         crianca = self.visit_children(tree)
-        crianca = [crianca[0][1:-1]]
-        retorno = f"escreve '{crianca[0]}'"
+        if crianca[0][0] == '"' and crianca[0][-1] == '"':
+            crianca = [crianca[0][1:-1]]
+            crianca[0] = f"'{crianca[0]}'"
+        retorno = f"escreve {crianca[0]}"
         self.adicionar_grafico(retorno)
         self.ultima_visita.append(retorno)
         return retorno
@@ -266,8 +272,10 @@ class MyInterpreter(Interpreter):
     def imprime(self, tree):
         self.instrucoes['imprime'] += 1
         crianca = self.visit_children(tree)
-        crianca = [crianca[0][1:-1]]
-        retorno = f"imprime '{crianca[0]}'"
+        if crianca[0][0] == '"' and crianca[0][-1] == '"':
+            crianca = [crianca[0][1:-1]]
+            crianca[0] = f"'{crianca[0]}'"
+        retorno = f"imprime {crianca[0]}"
         self.adicionar_grafico(retorno)
         self.ultima_visita.append(retorno)
         return retorno
@@ -290,6 +298,7 @@ class MyInterpreter(Interpreter):
             ultimo = self.ultima_visita[-1]
             self.controlo = False
             self.ultima_visita.append(f"se {expr}")
+            return f"se {expr}"
         
         # se tiver if e else
         elif len(tree.children) == 5:
@@ -315,6 +324,7 @@ class MyInterpreter(Interpreter):
                 ultimo = self.ultima_visita
                 self.ultima_visita = [f"se {expr}"]
             self.ultima_visita.extend(ultimo)
+            return f"se {expr}"
 
         # se tiver elif's e/ou else
         else:
@@ -349,6 +359,7 @@ class MyInterpreter(Interpreter):
                     self.visit(tree.children[i+1])
             self.ultima_visita.extend(ultimo)
             self.ultima_visita.extend(ultimoSenao)
+            return f"se {expr}"
 
     def se_expr(self, tree):
         variavel = self.visit_children(tree)[0]
@@ -373,7 +384,6 @@ class MyInterpreter(Interpreter):
         self.controlo = True
         self.visit_children(tree)
         self.controlo = False
-
 
     def repeticao(self, tree):
         if self.controlo == True:
@@ -400,7 +410,6 @@ class MyInterpreter(Interpreter):
         self.adicionar_grafico(inst)
         self.ultima_visita.append(f"ate {expr}")
 
-
     def expr(self, tree):
         expr = ''
         for i, child in enumerate(tree.children):
@@ -418,35 +427,70 @@ class MyInterpreter(Interpreter):
     def OP(self, tree):
         return tree.children[0].value
 
-frase1 = """
-fun Principal() {
+insts = """
+fun Decl() {
     deixa x: Int = 5
-    deixa z: Int
+    deixa y: Int
+    const z: Estringue = "Teste"
+    y = x + 10
+    escreve y
+    imprime z
+}"""
+
+ifs = """
+fun Ifs(z: Int) {
+    deixa x: Int = 5
     deixa y: Int = 0
-    fazer
-        z = z + 1
-        y = 5
-        imprime "O número."
-        escreve "O número +."
-    ate 7 == 7
+    se z > x entao
+        escreve "z é maior que x."
+    senao z < x entao
+        escreve "z é menor que x."
+    defeito
+        escreve "z é igual a x."
     fim
-    enq 5 > 3 fazer
-        z = 5
-        x = 4
-        enq 2 > 1 fazer
-            z = 2
-            se 2 > 0 entao
-                z = 1
-                escreve "O número é positivo."
+}
+"""
+
+ciclos = """
+fun Ciclos() {
+    deixa x: Int = 5
+    deixa y: Int = 10
+    enq x > 0 fazer
+        escreve "x é maior que 0."
+        x = x - 1
+    fim
+    fazer
+        escreve "y é maior que 0."
+        y = y - 1
+    ate y == 0
+    fim
+}
+"""
+
+frase1 = """
+fun Teste() {
+    deixa x: Int = 5
+    deixa y: Int = 10
+    deixa z: Int = 0
+    fazer
+        z = 1 + z
+    ate z > 10
+    fim
+    enq z > 0 fazer
+        fazer
+            se x > z entao
+                z = z - 1
+            senao x < z entao
+                z = z + 1
             defeito
-                z = 0
-                imprime "O número é negativo."
+                imprime "z é igual a x."
             fim
+        ate x == z
         fim
     fim
-    deixa y: Int = 5 + 3
+    y = x + z
+    escreve y
 }
-
 """
 
 frase2 = """
@@ -513,7 +557,7 @@ fun main() {
 
 p = Lark(grammar2) # cria um objeto parser
 
-frase = frase1
+frase = insts
 tree = p.parse(frase)  # retorna uma tree
-pydot__tree_to_png(tree,'frase1.png')
+pydot__tree_to_png(tree,'insts.png')
 data = MyInterpreter().visit(tree)
