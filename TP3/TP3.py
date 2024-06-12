@@ -558,11 +558,9 @@ fun Principal() {
 }
 """
 
-
-
 p = Lark(grammar2) # cria um objeto parser
 
-frase = frase3
+frase = frase1
 tree = p.parse(frase)  # retorna uma tree
-pydot__tree_to_png(tree,'frase3.png')
+pydot__tree_to_png(tree,'frase1.png')
 data = MyInterpreter().visit(tree)
