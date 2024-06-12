@@ -21,7 +21,7 @@ parametro: ID ":" tipo
 decls: decl+
 decl: var ID ":" tipo ("=" expr)?
 
-var: DEIXA | CONST
+var: SEJA | CONST
 tipo: INT | SET | ARRAY | TUPLO | ESTRINGUE | LISTA
 
 insts: inst+
@@ -33,8 +33,8 @@ ler: "ler" ID
 escreve: "escreve" expr
 imprime: "imprime" expr
 
-se: SE se_expr "entao" insts(SENAO se_expr "entao" insts)* (DEFEITO insts)? "fim"
-caso: CORRESPONDE expr "com" (CASO expr "=>" insts ("break")?)+ (DEFEITO "=>" insts)? "fim"
+se: SE se_expr "entao" insts(SENAO se_expr "entao" insts)* (OMISSAO insts)? "fim"
+caso: CORRESPONDE expr "com" (CASO expr "=>" insts ("break")?)+ (OMISSAO "=>" insts)? "fim"
 
 repeticao: enq_fazer | repetir_ate
 
@@ -49,7 +49,7 @@ term: NUM | STRING | ID
 NUM: /[0-9]+(,[0-9]+)?/
 STRING: /"([^"]+)"/
 ID: /[a-zA-Z_]\w*/
-DEIXA: "deixa"
+SEJA: "seja"
 CONST: "const"
 INT: "Int"
 SET: "Set"
@@ -59,7 +59,7 @@ ESTRINGUE: "Estringue"
 LISTA: "Lista"
 SE: "se"
 SENAO: "senao"
-DEFEITO: "defeito"
+OMISSAO: "omissao"
 CORRESPONDE: "corresponde"
 CASO: "caso"
 OP: "+" | "-" | "*" | "/" | "%" | "^" 
@@ -80,7 +80,7 @@ class MyInterpreter(Interpreter):
 
         # {(None, 'Global'): [],
         # ('Classe', 'Exemplo'): [{('VARIAVEL', 'Int'): (None, 'const')}],
-        # ('Funcao', 'soma'): [{('d', 'Int'): ('5', 'deixa')}]
+        # ('Funcao', 'soma'): [{('d', 'Int'): ('5', 'seja')}]
         # }
         self.dic_vars= {}
 
@@ -101,6 +101,7 @@ class MyInterpreter(Interpreter):
         self.ultima_visita = []
         
         self.dot = ''
+        self.dot_light = ''
 
     def adicionar_grafico(self, estringue):
         condicoes = ["se", "corresponde", "enq", "ate", "senao"]
@@ -128,11 +129,16 @@ class MyInterpreter(Interpreter):
         gen_html(frase, self.finalIfs, self.vars, self.instrucoes, self.estruturas_controlo, self.erros, self.aviso)
         print(self.dot)
         dot_graph = graphviz.Source(self.dot)
+        dot_graph_light = graphviz.Source(self.dot_light)
         if not os.path.exists("static"):
             os.makedirs("static")
 
         # Save the graph as an image file (PNG format in this case) in outputs folder
         dot_graph.render(f"cfg",
+                        directory="static/",
+                        format="png",
+                        cleanup=True)
+        dot_graph_light.render(f"cfg_light",
                         directory="static/",
                         format="png",
                         cleanup=True)
@@ -151,11 +157,10 @@ class MyInterpreter(Interpreter):
 
     def funcao(self, tree):
         self.dot += f'''digraph {tree.children[0].value} {{
-            beautify = true;
+    beautify = true;
     graph [fontname = "JetBrains Mono", color=\"#8BAB92\", pad=\"0.5\"];
     node [fontname = "JetBrains Mono", color=\"#8BAB92\", fontcolor=\"#000000\", style="filled", fillcolor=\"#8BAB92\"];
     edge [fontname = "JetBrains Mono", color=\"#E94A31\"];
-    bgcolor=\"#1E1E1E\";
     inicio [fontcolor="#303030"];
     fim [fontcolor="#303030"];\n\n'''
         self.dic_vars[('Funcao',tree.children[0].value)] = []
@@ -170,7 +175,13 @@ class MyInterpreter(Interpreter):
         for visita in self.ultima_visita:
             self.dot += f'"{visita}" -> "fim"\n'
         self.adicionar_formas()
-        self.dot += '}'
+        self.dot_light = self.dot
+        self.dot += '''
+    bgcolor=\"#1E1E1E\";
+    }'''
+        self.dot_light += '''
+    bgcolor=\"#f5f5f5\";
+    }'''
         
 
     def parametros(self, tree): 
@@ -228,7 +239,7 @@ class MyInterpreter(Interpreter):
                 finalResult = " e ".join(self.insideIf_acc)+":"
                 before = self.insideIf_acc[0] + " , " + "".join([ i  for i in self.insideIf_acc[1:]])
                 self.finalIfs.append(before+" => "+finalResult)
-                self.insideIf_acc = []
+            self.insideIf_acc = []
             self.insideIf = False
         return self.visit_children(tree)[0]
 
@@ -238,7 +249,7 @@ class MyInterpreter(Interpreter):
                 for key in list.keys():
                     if key[0] == tree.children[0].value:
                         if list[key][0] != None and list[key][1] == 'const':
-                            self.erros.append(f"ERRO: Variável constante não pode ser alterada: {key[0]}")
+                            self.erros.append(f"ERRO: Valor constante não pode ser alterada: {key[0]}")
                             return False
                         list[key] = (self.visit_children(tree)[1], list[key][1])
                         self.instrucoes['atribuicoes'] += 1
@@ -291,7 +302,7 @@ class MyInterpreter(Interpreter):
             self.adicionar_grafico(f"se {expr}")
             self.ultima_visita.append(f"se {expr}")
             # self.adicionar_grafico(f"{se} {expr} {inst}")
-            self.insideIf_acc.append(self.visit(tree.children[1]))
+            self.insideIf_acc.append(expr)
             self.insideIf= True
             self.controlo = True
             self.visit(tree.children[2])
@@ -306,7 +317,7 @@ class MyInterpreter(Interpreter):
                 expr = self.visit(tree.children[1])
                 self.adicionar_grafico(f"se {expr}")
                 self.ultima_visita.append(f"se {expr}")
-                self.insideIf_acc.append(self.visit(tree.children[1]))
+                self.insideIf_acc.append(expr)
                 self.insideIf = True
                 self.controlo = True
                 self.visit(tree.children[2])
@@ -332,7 +343,7 @@ class MyInterpreter(Interpreter):
             expr = self.visit(tree.children[1])
             self.adicionar_grafico(f"se {expr}")
             self.ultima_visita.append(f"se {expr}")
-            self.insideIf_acc.append(self.visit(tree.children[1]))
+            self.insideIf_acc.append(expr)
             self.insideIf = True
             self.controlo = True
             self.visit(tree.children[2])
@@ -345,14 +356,14 @@ class MyInterpreter(Interpreter):
                     expr2 = self.visit(tree.children[i+1])
                     self.adicionar_grafico(f"senao {expr2}")
                     self.ultima_visita.append(f"senao {expr2}")
-                    self.insideIf_acc.append(self.visit(tree.children[i+1]))
+                    self.insideIf_acc.append(expr2)
                     self.insideIf = True
                     self.controlo = True
                     self.visit(tree.children[i+2])
                     ultimoSenao = self.ultima_visita
                     self.ultima_visita = [f"senao {expr2}"]
 
-                elif isinstance(child,lark_lexer.Token) and child.type == "DEFEITO":
+                elif isinstance(child,lark_lexer.Token) and child.type == "OMISSAO":
                     self.insideIf_acc = []
                     self.insideIf = False
                     self.controlo = False
@@ -362,19 +373,24 @@ class MyInterpreter(Interpreter):
             return f"se {expr}"
 
     def se_expr(self, tree):
-        variavel = self.visit_children(tree)[0]
+        # Iterate over children to check for undeclared variables
+        for child in tree.children:
+            if isinstance(child, Tree) and child.data == 'term':
+                term_child = child.children[0]
+                if isinstance(term_child, Token) and term_child.type == 'ID':
+                    variavel = term_child.value
+                    # Check if the variable is declared
+                    k = []
+                    for values in reversed(self.dic_vars.values()):
+                        for lista in values:
+                            for key in lista.keys():
+                                k.append(key[0])
+                    if variavel not in k:
+                        self.erros.append(f"ERRO: Variável não declarada: {variavel}")
 
         list_expr = self.visit_children(tree)
         expressao = [var.value if isinstance(var, lark_lexer.Token) else var for var in list_expr]
         expressao = " ".join(expressao)
-
-        k = []
-        for values in reversed(self.dic_vars.values()):
-            for lista in values:
-                for key in lista.keys():
-                    k.append(key[0])
-        if variavel not in k:
-            self.erros.append(f"ERRO: Variável não declarada: {variavel}")
         return expressao
 
     def caso(self, tree):
@@ -429,8 +445,8 @@ class MyInterpreter(Interpreter):
 
 insts = """
 fun Decl() {
-    deixa x: Int = 5
-    deixa y: Int
+    seja x: Int = 5
+    seja y: Int
     const z: Estringue = "Teste"
     y = x + 10
     escreve y
@@ -439,13 +455,13 @@ fun Decl() {
 
 ifs = """
 fun Ifs(z: Int) {
-    deixa x: Int = 5
-    deixa y: Int = 0
+    seja x: Int = 5
+    seja y: Int = 0
     se z > x entao
         escreve "z é maior que x."
     senao z < x entao
         escreve "z é menor que x."
-    defeito
+    omissao
         escreve "z é igual a x."
     fim
 }
@@ -453,51 +469,71 @@ fun Ifs(z: Int) {
 
 ciclos = """
 fun Ciclos() {
-    deixa x: Int = 5
-    deixa y: Int = 10
+    seja x: Int = 5
+    seja y: Int = 10
     enq x > 0 fazer
         escreve "x é maior que 0."
         x = x - 1
-    fim
+    fim 
     fazer
         escreve "y é maior que 0."
         y = y - 1
     ate y == 0
-    fim
+    fim 
 }
 """
 
 frase1 = """
+fun Principal() {
+    seja x: Int = 5
+    seja z: Int
+    seja y: Int = 0
+    se a > 3 entao
+        se 5 > b entao
+            z = z + 1
+            y = 5
+        fim 
+    senao 7 == 7 entao
+        se 7 < 8 entao
+            imprime "cenas"
+        fim 
+    omissao 
+        escreve "O número -."
+    fim 
+}
+"""
+
+frase2 = """
 fun Teste() {
-    deixa x: Int = 5
-    deixa y: Int = 10
-    deixa z: Int = 0
+    seja x: Int = 5
+    seja y: Int = 10
+    seja z: Int = 0
     fazer
         z = 1 + z
     ate z > 10
-    fim
+    fim 
     enq z > 0 fazer
         fazer
             se x > z entao
                 z = z - 1
             senao x < z entao
                 z = z + 1
-            defeito
+            omissao 
                 imprime "z é igual a x."
-            fim
+            fim 
         ate x == z
-        fim
-    fim
+        fim 
+    fim 
     y = x + z
     escreve y
 }
 """
 
-frase2 = """
+frase3 = """
 fun Principal() {
-    deixa x: Int = 5
-    deixa z: Int
-    deixa y: Int = 0
+    seja x: Int = 5
+    seja y: Int = 0
+    seja z: Int
     se 5 > 3 entao
         z = z + 1
         y = 5
@@ -505,59 +541,28 @@ fun Principal() {
         escreve "O número +."
     senao 7 == 7 entao
         imprime "cenas"
-    defeito
+    omissao 
         escreve "O número -."
-    fim
-}
-"""
-
-frase3 = """
-
-fun main() {
-    deixa numero: Int = 10
-    deixa x: Int = 10
-
-    se numero > 0 entao
-        se numero > 5 entao
-            escreve "O número é positivo e maior que 5."
-        fim
-    senao numero < 2 entao
-        se numero < 0 entao
-            escreve "O número é negativo e menor que -5."  
-        fim    
-    defeito 
-        escreve "O número é zero."
     fim 
-
-    enq numero > 0 fazer
-        se numero > 5 entao
-            imprime "Número é positivo e maior que 5."
-        defeito
-            imprime "Número é positivo e menor ou igual a 5."
-        fim
-        imprime_mensagem()
-        numero = numero - 1
     
-    x = 20
-
-
-    corresponde numero com
+    corresponde z com
         caso 1 =>
-            se numero > 0 entao
-                x = 10
-            fim
+            se x > 0 entao
+                y = 10
+            fim 
         caso 2 =>
             escreve "Número é 2."
-        defeito =>
+        omissao =>
             escreve "Número é diferente de 1 e 2."
     fim 
 }
-    """
+"""
+
 
 
 p = Lark(grammar2) # cria um objeto parser
 
-frase = insts
+frase = frase3
 tree = p.parse(frase)  # retorna uma tree
-pydot__tree_to_png(tree,'insts.png')
+pydot__tree_to_png(tree,'frase3.png')
 data = MyInterpreter().visit(tree)

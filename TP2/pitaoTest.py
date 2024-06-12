@@ -3,7 +3,7 @@ from lark.tree import pydot__tree_to_png
 from lark.visitors import Interpreter
 import lark.tree as lark_tree
 import lark.lexer as lark_lexer
-from html import gen_html
+from gen_html import gen_html
 
 
 grammar2 = '''
@@ -195,7 +195,7 @@ class MyInterpreter(Interpreter):
                 finalResult = " e ".join(self.insideIf_acc)+":"
                 before = self.insideIf_acc[0] + " , " + "".join([ i  for i in self.insideIf_acc[1:]])
                 self.finalIfs.append(before+" => "+finalResult)
-                self.insideIf_acc = []
+            self.insideIf_acc = []
             self.insideIf = False
         self.visit_children(tree)
 
@@ -460,9 +460,9 @@ fim
 
 
 p = Lark(grammar2) # cria um objeto parser
-pydot__tree_to_png(p.parse(frase1),'lark_test.png')
+pydot__tree_to_png(p.parse(frase2),'lark_test.png')
 
-tree = p.parse(frase1)  # retorna uma tree
+tree = p.parse(frase2)  # retorna uma tree
 #print(tree)
 #print(tree.pretty())
 pydot__tree_to_png(tree,'lark_test.png')

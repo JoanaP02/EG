@@ -6,17 +6,28 @@
     <title>Code Layout Example with Image in Header</title>
     <style>
         body, html {
-            background-color: #000000;
             height: 100%;
             margin: 0;
             font-family: Arial, sans-serif;
+        }
+        body.dark-mode {
+            background-color: #000000;
             color: #8BAB92;
         }
+        body.light-mode {
+            background-color: #FFFFFF;
+            color: #000000;
+        }
         .header {
-            background-color: #252525;
             padding: 20px;
             position: relative;
             text-align: center;
+        }
+        .header.dark-mode {
+            background-color: #252525;
+        }
+        .header.light-mode {
+            background-color: #f0f0f0;
         }
         .header img {
             position: absolute;
@@ -27,163 +38,214 @@
         }
         .container {
             display: flex;
-            background-color: #000000;
+            height: calc(100% - 60px); /* Adjust based on header height */
         }
         .left-column {
-            background-color: #1E1E1E;
             flex: 1;
-            margin-left: 10px;
-            margin-top: 10px;
-            margin-bottom: 5px;
-            margin-right: 5px;
+            margin: 10px 5px 5px 10px;
             border-radius: 5px;
             padding: 20px;
-            color: #AADAFA;
             overflow-x: auto;
             white-space: pre;
             font-family: Consolas, Monaco, 'Andale Mono', monospace;
             font-size: 14px;
         }
-        .left-column .cond {
+        .left-column.dark-mode {
+            background-color: #1E1E1E;
+            color: #AADAFA;
+        }
+        .left-column.light-mode {
+            background-color: #f5f5f5;
+            color: #000000;
+        }
+        .left-column.dark-mode .cond {
             color: #AA7CAB;
         }
-        .left-column .funcla {
+        .left-column.dark-mode .funcla {
             color: #DCDCAF;
+        }
+        .left-column.light-mode .cond {
+            color: #001080;
+        }
+        .left-column.light-mode .funcla {
+            color: #A31515;
         }
         .middle-column {
             flex: 1;
             display: flex;
             flex-direction: column;
+            margin: 10px 5px;
         }
-        .right-column{
-            background-color: #1E1E1E;
+        .right-column {
             flex: 1;
-            margin-left: 5px;
-            margin-top: 10px;
-            margin-bottom: 5px;
-            margin-right: 10px;
+            margin: 10px 10px 5px 5px;
             border-radius: 5px;
             padding: 10px;
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+        .right-column.dark-mode {
+            background-color: #1E1E1E;
+        }
+        .right-column.light-mode {
+            background-color: #f5f5f5;
         }
         .right-column img {
-            position: absolute;
             max-width: 100%;
             max-height: 100%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .right-box {
-            flex: 1;
-            margin-left: 5px;
-            margin-right: 5px;
-            border-radius: 5px;
-            padding: 10px;
-            color: #8BAB92;
-            position: relative;
         }
         .box {
             flex: 1;
-            margin-left: 5px;
-            margin-right: 5px;
+            margin: 5px;
             border-radius: 5px;
             padding: 20px;
+        }
+        .box.dark-mode {
+            background-color: #1E1E1E;
             color: #8BAB92;
-            position: relative;
         }
-        .top {
-            background-color: #1E1E1E;
-            margin-top: 10px;
-            margin-bottom: 5px;
-        }
-        .middle {
-            background-color: #1E1E1E;
-            margin-top: 5px;
-            margin-bottom: 5px;
-        }
-        .bottom {
-            background-color: #1E1E1E;
-            margin-top: 5px;
-            margin-bottom: 5px;
-        }
-        .sub-bottom {
-            background-color: #1E1E1E;
-            margin-top: 5px;
-            margin-bottom: 5px;
+        .box.light-mode {
+            background-color: #f5f5f5;
+            color: #000000;
         }
         .sub-box {
             display: flex;
             justify-content: space-between;
         }
         .variables, .instructions {
-            background-color: #1E1E1E;
             flex: 1;
             margin: 5px;
             border-radius: 5px;
+            padding: 10px;
+        }
+        .variables.dark-mode, .instructions.dark-mode {
+            background-color: #1E1E1E;
             color: #8BAB92;
         }
+        .variables.light-mode, .instructions.light-mode {
+            background-color: #f5f5f5;
+            color: #000000;
+        }
     </style>
+    <script>
+        function toggleMode() {
+            const body = document.body;
+            const header = document.querySelector('.header');
+            const leftColumn = document.querySelector('.left-column');
+            const rightColumn = document.querySelector('.right-column');
+            const boxes = document.querySelectorAll('.box');
+            const variables = document.querySelectorAll('.variables');
+            const instructions = document.querySelectorAll('.instructions');
+            const img = document.querySelector('.right-column img');
+            body.classList.toggle('dark-mode');
+            body.classList.toggle('light-mode');
+            header.classList.toggle('dark-mode');
+            header.classList.toggle('light-mode');
+            leftColumn.classList.toggle('dark-mode');
+            leftColumn.classList.toggle('light-mode');
+            rightColumn.classList.toggle('dark-mode');
+            rightColumn.classList.toggle('light-mode');
+
+            boxes.forEach(box => {
+                box.classList.toggle('dark-mode');
+                box.classList.toggle('light-mode');
+            });
+            variables.forEach(variable => {
+                variable.classList.toggle('dark-mode');
+                variable.classList.toggle('light-mode');
+            });
+            instructions.forEach(instruction => {
+                instruction.classList.toggle('dark-mode');
+                instruction.classList.toggle('light-mode');
+            });
+
+            if (body.classList.contains('light-mode')) {
+                img.src = 'static/cfg_light.png';
+            } else {
+                img.src = 'static/cfg.png';
+            }
+        }
+    </script>
 </head>
-<body>
-    <div class="header">
+<body class="dark-mode">
+    <div class="header dark-mode">
         <b>Pitão - O Python Tuga</b>
         <img src="static/cobra_logo.png" alt="Logo">
+        <button style="position: absolute; top: 20px; left: 20px;" onclick="toggleMode()">Switch Mode</button>
     </div>
     <div class="container">
-        <div class="left-column">
+        <div class="left-column dark-mode">
 <code>
-fun Decl() {
-   <span class='funcla'> deixa </span>x: Int = 5
-   <span class='funcla'> deixa </span>y: Int
-   <span class='funcla'> const </span>z: Estringue = "Teste"
-    y = x + 10
-   <span class='funcla'> escreve </span>y
-    imprime z
-}</code>
+fun Principal() {
+   <span class='funcla'> seja </span>x: Int = 5
+   <span class='funcla'> seja </span>y: Int = 0
+   <span class='funcla'> seja </span>z: Int
+   <span class='cond'> se </span>5 > 3 entao
+        z = z + 1
+        y = 5
+       <span class='funcla'> imprime </span>"O número."
+       <span class='funcla'> escreve </span>"O número +."
+   <span class='cond'> senao </span>7 == 7 entao
+       <span class='funcla'> imprime </span>"cenas"
+   <span class='cond'> omissao </span>
+       <span class='funcla'> escreve </span>"O número -."
+   <span class='cond'> fim </span>
+    
+   <span class='cond'> corresponde </span>z com
+        caso 1 =>
+           <span class='cond'> se </span>x > 0 entao
+                y = 10
+           <span class='cond'> fim </span>
+        caso 2 =>
+           <span class='funcla'> escreve </span>"Número é 2."
+       <span class='cond'> omissao </span>=>
+           <span class='funcla'> escreve </span>"Número é diferente de 1 e 2."
+   <span class='cond'> fim </span>
+}
+</code>
         </div>
         <div class="middle-column">
-            <div class="box top sub-box">
-                <div class="variables">
+            <div class="box top sub-box dark-mode">
+                <div class="variables dark-mode">
                     Variáveis:
                     <ul>
-                        <li>'Int': 2</li>
+                        <li>'Int': 3</li>
                         <li>'Set': 0</li>
                         <li>'Array': 0</li>
                         <li>'Tuplo': 0</li>
-                        <li>'Estringue': 1</li>
+                        <li>'Estringue': 0</li>
                         <li>'Lista': 0</li>
                     </ul>
                 </div>
-                <div class="instructions">
+                <div class="instructions dark-mode">
                     Instruções:
                     <ul>
                         <li>Declarações: 3</li>
-                        <li>Atribuições: 1</li>
+                        <li>Atribuições: 3</li>
                         <li>Leitura: 0</li>
-                        <li>Escrita: 1</li>
-                        <li>Imprime: 1</li>
-                        <li>Condicionais: 0</li>
+                        <li>Escrita: 4</li>
+                        <li>Imprime: 2</li>
+                        <li>Condicionais: 3</li>
                         <li>Cíclicas: 0</li>
                     </ul>
                 </div>
             </div>
-            <div class="box middle">
+            <div class="box middle dark-mode">
                 Erros e Avisos:
                 <ul>
                     
                     
                 </ul>
             </div>
-            <div class="box bottom">
-                <div class="variables">
+            <div class="box bottom dark-mode">
+                <div class="variables dark-mode">
                     Nº de Estruturas de Controlo aninhadas:
-                    0
+                    1
                 </div>
             </div>
-            <div class="box sub-bottom sub-box">
-                <div class="instructions">
+            <div class="box sub-bottom sub-box dark-mode">
+                <div class="instructions dark-mode">
                     <em>Ifs</em> aninhados que se podiam juntar:
                     <ul>
                         
@@ -191,8 +253,8 @@ fun Decl() {
                 </div>
             </div>
         </div>
-        <div class="right-column">
-            <div class="box">
+        <div class="right-column dark-mode">
+            <div class="box dark-mode">
                 <img src="static/cfg.png" alt="CFG">
             </div>
         </div>
